@@ -2,13 +2,26 @@
 #include <fstream>
 
 
+/////////////////////////
+// writeBufferToFile
+// Inputs:
+//        filePath : char*
+//        Image    : ImageBuffer*
+//
+// Returns:
+//         void
+/////////////////////////
 void writeBufferToFile(char *filePath, ImageBuffer *Image)
 {
+	//Create instance of outfile object
 	std::ofstream outfile;
 
-	outfile.open(filePath);
+	//Open file specified in filePath in outfile
+	outfile.open(filePath, std::ios::binary);
 
-	outfile.write((char*)Image->buffer, Image->size);
+	//Write all provied data to file
+	outfile.write((char*)Image->buffer, (unsigned long)*Image->size);
 
+	//close file
 	outfile.close();
 }

@@ -2,7 +2,7 @@
 #include "compression.h"
 #include "writeFile.h"
 #include <sstream>
-#include <turbojpeg.h>
+#include "turbojpeg.h"
 
 
 ///////////////////
@@ -15,26 +15,23 @@
 ///////////////////
 TJSAMP subSampling(char *arg)
 {
-	if (arg == "444")
+	if (arg[0] == '4' && arg[1] == '4' && arg[2] == '4')
 		return TJSAMP_444;
 
-	else if (arg == "440")
+	else if (arg[0] == '4' && arg[1] == '4' && arg[2] == '0')
 		return TJSAMP_440;
 
-	else if (arg == "422")
+	else if (arg[0] == '4' && arg[1] == '2' && arg[2] == '2')
 		return TJSAMP_422;
 
-	else if (arg == "420")
+	else if (arg[0] == '4' && arg[1] == '2' && arg[2] == '0')
 		return TJSAMP_420;
 
-	else if (arg == "411")
+	else if(arg[0] == '4' && arg[1] == '1' && arg[2] == '1')
 		return TJSAMP_411;
 
-	else if (arg == "gra")
-		return TJSAMP_GRAY;
-	
 	else
-		return 6;
+		return TJSAMP_GRAY;
 }
 
 
@@ -77,21 +74,19 @@ int convertStringToInt(char *string)
 ///////////////////////
 int main(int argc, char* argv[])
 {
-	if (argc == 4)
+	if (argc == 6)
 	{
 		TJSAMP sampling = subSampling(argv[2]);
 
-		if (argv[3] == "-c")
+		if (argv[3][0] == '-' && argv[3][1] == 'c')
 		{
 			ImageBuffer *bmp = readFileBMP(argv[1]);
 			
-			IntBuffer *quantitativeMatrix = readFileCSVQuantativeMatrix(argv[4]);
+			Int16Buffer *quantitativeMatrix = readFileCSVQuantativeMatrix(argv[4]);
 		
-			ImageBuffer *jpegImage = compressImage(bmp, quantitativeMatrix, sampling);
-
-			writeBufferToFile(argv[5], jpegImage);
+			compressImage(bmp, quantitativeMatrix, sampling, argv[5]);
 		}
-		else if (argv[3] == "-i")
+		else if (argv[3][0] == '-' && argv[3][1] == 'i')
 		{
 			ImageBuffer *bmp = readFileBMP(argv[1]);
 

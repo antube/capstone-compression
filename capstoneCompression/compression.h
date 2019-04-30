@@ -4,4 +4,4 @@
 
 ImageBuffer* compressImage(ImageBuffer*, int, TJSAMP);
 
-ImageBuffer* compressImage(ImageBuffer*, IntBuffer*, TJSAMP);
+void compressImage(ImageBuffer*, Int16Buffer*, TJSAMP, char*);

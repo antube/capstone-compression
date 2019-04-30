@@ -21,7 +21,7 @@ ImageBuffer* readFileBMP(char *filename)
 	infile.open(filename, std::ios::binary);
 
 	//If Infile has not opened return nullptr
-	if (!infile)
+	if (!infile.is_open())
 		return nullptr;
 
 	tagBITMAPFILEHEADER *header1 = new tagBITMAPFILEHEADER;
@@ -34,14 +34,19 @@ ImageBuffer* readFileBMP(char *filename)
 
 	ImageBuffer *buffer = new ImageBuffer;
 
+	if (header2->biBitCount == 1)
+		buffer->colorSpace = TJPF_GRAY;
+	else
+		buffer->colorSpace = TJPF_RGB;
+
 	buffer->width = header2->biWidth;
 	buffer->height = header2->biHeight;
-	buffer->pitch = buffer->width * 3;
+	buffer->pitch = buffer->width * ((buffer->colorSpace == TJPF_GRAY)?1:3);
 
 	int *pixelFormat = new int;
 	*pixelFormat = TJPF_RGB;
 
-	buffer->size = buffer->height * buffer->width * 3;
+	*buffer->size = buffer->height * buffer->pitch;
 
 	buffer->init(tjLoadImage(filename, &buffer->width, 1, &buffer->height, pixelFormat, TJFLAG_STOPONWARNING));
 
@@ -66,40 +71,35 @@ ImageBuffer* readFileBMP(char *filename)
 // Returns:
 //         IntBuffer* 
 //////////////////////
-IntBuffer* readFileCSVQuantativeMatrix(char *filePath)
+Int16Buffer* readFileCSVQuantativeMatrix(char *filePath)
 {
 	//Create instance of ifstream object
 	std::ifstream infile;
 	
 	//Attempt to open csv file
-	infile.open(filePath);
+	infile.open(filePath, 0);
 
 	//If infile did not open correctly
 	if (!infile)
 		//Return a nullptr
 		return nullptr;
 
-	//Move to end of file
-	infile.seekg(std::ios::end);
-	
-	//Retrive position in file to give length of file
-	int length = infile.tellg();
-
-	//Move to beggining of file
-	infile.seekg(std::ios::beg);
-
 	//Create string to store indivuadle numbers before conversion to int and storage in matrix
 	std::string num;
 
-	IntBuffer *CSVBuffer;
+	//
+	Int16Buffer *CSVBuffer = new Int16Buffer;
 
+	//
 	CSVBuffer->init(64);
 
+	//
 	int index = 0;
 
-	do
+	while (!infile.eof())
 	{
-		char *character;
+		//
+		char *character = new char;
 
 		//Read in a single character
 		infile.read(character, 1);
@@ -107,11 +107,35 @@ IntBuffer* readFileCSVQuantativeMatrix(char *filePath)
 		//If character equals deliminator, comma
 		if (*character == ',')
 		{
+			int number = 0;
 			//convert string to int and assign to location in quatization matrix
 			//If conversion failed set value to zero
-			if( !(std::istringstream(num) >> CSVBuffer->buffer[index]))
-				CSVBuffer->buffer[index] = 0;
+			if (!(std::istringstream(num) >> number))
+			{
+				switch (index / 64)
+				{
+					case 0:
+						CSVBuffer->buffer1[index % 64] = 1;
+						break;
 
+					case 1:
+						CSVBuffer->buffer2[index % 64] = 1;
+						break;
+				}
+			}
+			else
+			{
+				switch (index / 64)
+				{
+					case 0:
+						CSVBuffer->buffer1[index % 64] = number;
+						break;
+
+					case 1:
+						CSVBuffer->buffer2[index % 64] = number;
+						break;
+				}
+			}
 			//Reset num to blank string
 			num = "";
 
@@ -123,9 +147,12 @@ IntBuffer* readFileCSVQuantativeMatrix(char *filePath)
 			//Add character
 			num += *character;
 
-	} while (infile.tellg() < length);
+	//
+	}
 
+	//
 	infile.close();
 
+	//
 	return CSVBuffer;
 }

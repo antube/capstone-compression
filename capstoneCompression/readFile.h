@@ -1,6 +1,6 @@
 #pragma once
 #include "structs.h"
 
-IntBuffer* readFileCSVQuantativeMatrix(char*);
+Int16Buffer* readFileCSVQuantativeMatrix(char*);
 
 ImageBuffer* readFileBMP(char*);
